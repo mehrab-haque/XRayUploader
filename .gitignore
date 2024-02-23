@@ -3,3 +3,4 @@ node_modules
 app-linux
 app-macos
 app-win.exe
+log.txt

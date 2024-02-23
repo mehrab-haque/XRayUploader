@@ -25,20 +25,24 @@ const watcher = chokidar.watch(watchFolder, {
 const logFilePath = process.env.LOG_FILE;
 
 function isFileUploaded(filePath) {
-  if (!fs.existsSync(logFilePath)) {
-    return false;
-  }
+    if (!fs.existsSync(logFilePath)) {
+        return false;
+    }
 
-  const uploadedFiles = fs.readFileSync(logFilePath, 'utf8');
-  return uploadedFiles.includes(filePath);
+    const uploadedFiles = fs.readFileSync(logFilePath, 'utf8');
+    return uploadedFiles.includes(filePath);
 }
 
 function logFileUpload(filePath) {
-  fs.appendFileSync(logFilePath, filePath + '\n');
+    fs.appendFileSync(logFilePath, filePath + '\n');
 }
 
 function processDicomFile(filePath) {
     console.log(`New DICOM file detected: ${filePath}`);
+    if (isFileUploaded(filePath)) {
+        console.log(`Skipping ${filePath}, already uploaded.`);
+        return;
+    }
     fs.readFile(filePath, (err, data) => {
         if (err) {
             console.error(`Error reading DICOM file: ${filePath}`, err)
@@ -59,6 +63,7 @@ function processDicomFile(filePath) {
             s3.upload(params, function (s3Err, data) {
                 if (s3Err) throw s3Err;
                 console.log(`File uploaded successfully to DCM4CHEE`);
+                logFileUpload(filePath);
             });
             console.log(`Patient's Name in ${path.basename(filePath)}:`, newFileName)
         } catch (e) {
